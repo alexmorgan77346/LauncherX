@@ -795,3 +795,33 @@ window.addEventListener('appinstalled', ()=>{
     window.addEventListener('load', ()=> setTimeout(()=> openPanel(target), 300));
   }
 })();
+
+/* ============ PWA: IMMERSIVE FULLSCREEN + LANDSCAPE LOCK ============
+   manifest.json already requests display:"fullscreen" + orientation:"landscape"
+   for when the app is installed, but this gives the same edge-to-edge,
+   no-status-bar/no-nav-bar experience even when just opened in a mobile
+   browser tab (where the manifest alone can't remove browser/OS chrome). */
+function tryEnterImmersiveMode(){
+  try{
+    if(screen.orientation && screen.orientation.lock){
+      screen.orientation.lock('landscape').catch(()=>{ /* not supported/allowed here — fine, ignore */ });
+    }
+  }catch(e){ /* older browsers: no Screen Orientation API */ }
+
+  try{
+    const el = document.documentElement;
+    if(document.fullscreenEnabled && !document.fullscreenElement && el.requestFullscreen){
+      el.requestFullscreen().catch(()=>{ /* needs a user gesture in some browsers — handled below */ });
+    }
+  }catch(e){ /* Fullscreen API unsupported — app still works, just keeps browser chrome */ }
+}
+// Try immediately (works when launched as an installed/fullscreen PWA).
+window.addEventListener('load', tryEnterImmersiveMode);
+// Most mobile browsers require an actual tap before allowing fullscreen — this
+// catches that on the very first tap anywhere in the app, once.
+document.addEventListener('click', function firstInteractionForFullscreen(){
+  tryEnterImmersiveMode();
+  document.removeEventListener('click', firstInteractionForFullscreen);
+}, { once:true });
+// Re-request landscape lock if orientation ever changes back (e.g. user rotates).
+window.addEventListener('orientationchange', ()=> setTimeout(tryEnterImmersiveMode, 300));
