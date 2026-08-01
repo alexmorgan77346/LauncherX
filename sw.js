@@ -6,7 +6,7 @@
    Bump CACHE_VERSION whenever you change any cached file so returning
    users automatically pick up the new version.
    ===================================================================== */
-const CACHE_VERSION = 'alex-launcher-v1';
+const CACHE_VERSION = 'alex-launcher-v2';
 const APP_SHELL = [
   './',
   './index.html',
